@@ -6,7 +6,7 @@ use crate::{
     config::Config
 };
 
-pub struct Programm {
+pub struct Program {
     pub cfg: Config,
     cursor: Cursor
 }
