@@ -13,7 +13,7 @@ use crossterm::event::{
 };
 
 pub struct EventMgr {
-    queue: VecDeque<Todo>
+    pub queue: VecDeque<Todo>
 }
 
 impl EventMgr {
@@ -40,7 +40,7 @@ impl EventMgr {
 
             KeyEvent {
                 code: KeyCode::Char('q'),
-                modifiers: SHIFT,
+                modifiers: CONTROL,
                 ..
             } => self.queue.push_back(Quit),
 

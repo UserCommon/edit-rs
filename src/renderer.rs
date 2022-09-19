@@ -6,6 +6,7 @@ use std::ptr::write;
 use crossterm::{
     execute,
     terminal::{
+        self,
         size,
         EnterAlternateScreen,
         LeaveAlternateScreen,
@@ -35,6 +36,11 @@ impl RenderMgr {
         })
     }
 
+    pub fn set_size(&mut self, size: (u16, u16)) {
+        self.rows = size.0;
+        self.columns = size.1;
+    }
+
     pub fn enter_canvas(&mut self) -> Result<()> {
         self.stdout.execute(EnterAlternateScreen)?;
         enable_raw_mode()?;
@@ -49,27 +55,25 @@ impl RenderMgr {
 
     /// this function drawing things
     pub fn draw(&mut self, cfg: &Config) -> Result<()> {
-        self.stdout.flush()?;
+        self.stdout.execute(terminal::Clear(terminal::ClearType::All))?;
         // draw_header
-        self.draw_panel("label", cfg)?;
-        for _ in 0..(self.columns - cfg.header_height - cfg.footer_height) {
-            write!(self.stdout, "\r{}\n", " ")?;
-        }
+        self.draw_panel("label", cfg, true)?;
 
         // draw document data
-//        write!(self.stdout, "\r{}")
-
+        self.draw_doc("yep".to_string(), cfg)?;
 
         // draw footer
-        self.draw_panel("label", cfg)?;
+        self.draw_panel("label", cfg, false)?;
         Ok(())
     }
-
-    fn draw_panel(&mut self, label: &str, cfg: &Config) -> Result<()> {
+    // Не работает
+    fn draw_panel(&mut self, label: &str, cfg: &Config, is_header: bool) -> Result<()> {
         let to_draw = " ".repeat(self.rows as usize - label.len()) + label;
-        write!(self.stdout, "\r{}", to_draw
-                                        .on(cfg.default_background_color)
-                                        .with(cfg.default_font_color))?;
+        for _ in 0..if is_header {cfg.header_height} else {cfg.footer_height} - 1 {
+            write!(self.stdout, "\r{}", to_draw
+                .on(cfg.default_background_color)
+                .with(cfg.default_font_color))?;
+        }
         Ok(())
     }
 

@@ -14,5 +14,5 @@ use cursor::Cursor;
 fn main() {
     let mut app = Program::builder()
                 .build();
-    app.run();
+    app.run().unwrap();
 }

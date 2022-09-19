@@ -1,14 +1,8 @@
 use std::borrow::{Borrow, BorrowMut};
 use crossterm::cursor::CursorShape;
 use std::io::Result;
-use crate::{
-    utils,
-    cursor::Cursor,
-    events::EventMgr,
-    renderer,
-    config::Config,
-    renderer::RenderMgr
-};
+use std::process::exit;
+use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Todo};
 
 
 pub struct Program {
@@ -24,10 +18,40 @@ impl Program {
     }
 
     pub fn run(&mut self) -> Result<()>{
+        self.render.enter_canvas()?;
         loop {
             self.render.draw(&self.cfg)?;
             self.event.event_manager()?;
+            self.handle_events()?;
         }
+
+    }
+
+    fn handle_events(&mut self) -> Result<()> {
+        let mut event;
+        for _ in 0..self.event.queue.len() {
+            event = self.event.queue.pop_back();
+            if let Some(e) = event {
+                self.match_event(e)?;
+            } else {
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    fn match_event(&mut self, event: Todo) -> Result<()> {
+        match event {
+            Todo::Quit => {
+                self.render.exit()?;
+                exit(0);
+            },
+            Todo::Resize(row, col) => {
+                self.render.set_size((row, col));
+            },
+            _ => ()
+        }
+        Ok(())
     }
 }
 
@@ -59,7 +83,7 @@ impl ProgramBuilder {
 
 impl Default for ProgramBuilder {
     fn default() -> Self {
-        let mut cursor = Cursor::builder().shape(CursorShape::Block).build();
+        let mut cursor = Cursor::builder().shape(CursorShape::Line).build();
         let cfg = Config::builder().build();
 
 
