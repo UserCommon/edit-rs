@@ -1,6 +1,7 @@
 use crossterm::style::{Color};
 
 /// Configuration struct
+#[derive(Clone)]
 pub struct Config {
     pub padding_size: u16,
     pub header_height: u16,
@@ -10,13 +11,71 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(padding: u16, header_s: u16, footer_s: u16, default_fg: Color, default_bg: Color) -> Self {
+    pub fn builder() -> ConfigBuilder {
+        ConfigBuilder::default()
+    }
+
+}
+
+pub struct ConfigBuilder {
+    padding_size: u16,
+    header_height: u16,
+    footer_height: u16,
+    default_font_color: Color,
+    default_background_color: Color
+}
+
+impl ConfigBuilder {
+    pub fn build(&mut self) -> Config {
         Config {
-            padding_size: padding,
-            header_height: header_s,
-            footer_height: footer_s,
-            default_font_color: default_fg,
-            default_background_color: default_bg,
+            padding_size: self.padding_size,
+            header_height: self.header_height,
+            footer_height: self.footer_height,
+            default_font_color: self.default_font_color,
+            default_background_color: self.default_background_color,
+        }
+    }
+
+    pub fn padding_size(&mut self, size: u16) -> &mut Self {
+        self.padding_size = size;
+        self
+    }
+
+    pub fn header_height(&mut self, size: u16) -> &mut Self {
+        self.header_height = size;
+        self
+    }
+
+    pub fn footer_height(&mut self, size: u16) -> &mut Self {
+        self.footer_height = size;
+        self
+    }
+
+    pub fn default_font_color(&mut self, color: Color) -> &mut Self {
+        self.default_font_color = color;
+        self
+    }
+
+    pub fn default_background_color(&mut self, color: Color) -> &mut Self {
+        self.default_background_color = color;
+        self
+    }
+}
+
+impl Default for ConfigBuilder {
+    fn default() -> Self {
+        let padding_size = 4;
+        let header_height = 2;
+        let footer_height = 2;
+        let default_font_color = Color::Rgb {r: 255, g: 255, b: 255};
+        let default_background_color = Color::Rgb {r: 65, g: 65, b: 65};
+
+        ConfigBuilder {
+            padding_size,
+            header_height,
+            footer_height,
+            default_font_color,
+            default_background_color
         }
     }
 }

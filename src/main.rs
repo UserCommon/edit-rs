@@ -9,7 +9,10 @@ mod files;
 use utils::{Direction, Todo};
 use config::Config;
 use program::Program;
+use cursor::Cursor;
 
 fn main() {
-
+    let mut app = Program::builder()
+                .build();
+    app.run();
 }

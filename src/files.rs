@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{File, Read, Result};
+use std::io::{Read, Result};
 
 
 pub struct FileMgr {
@@ -33,7 +33,7 @@ impl FileMgr {
         if self.curr > 0 { self.curr -= 1};
     }
 
-    pub fn get_text(&self) -> String {
+    pub fn get_text(&mut self) -> String {
         let mut data = String::new();
         self.files[self.curr].read_to_string(&mut data).expect("can't read file");
         data
