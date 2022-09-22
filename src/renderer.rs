@@ -57,22 +57,23 @@ impl RenderMgr {
     pub fn draw(&mut self, cfg: &Config) -> Result<()> {
         self.stdout.execute(terminal::Clear(terminal::ClearType::All))?;
         // draw_header
-        self.draw_panel("label", cfg, true)?;
+        self.draw_panel("header", cfg, true)?;
 
         // draw document data
         self.draw_doc("yep".to_string(), cfg)?;
 
         // draw footer
-        self.draw_panel("label", cfg, false)?;
+        self.draw_panel("footer", cfg, false)?;
         Ok(())
     }
     // Не работает
     fn draw_panel(&mut self, label: &str, cfg: &Config, is_header: bool) -> Result<()> {
         let to_draw = " ".repeat(self.rows as usize - label.len()) + label;
+
+        self.write_on_bg(to_draw, cfg)?;
+
         for _ in 0..if is_header {cfg.header_height} else {cfg.footer_height} - 1 {
-            write!(self.stdout, "\r{}", to_draw
-                .on(cfg.default_background_color)
-                .with(cfg.default_font_color))?;
+            self.write_on_bg(" ".repeat(self.rows as usize), cfg)?;
         }
         Ok(())
     }
@@ -82,7 +83,20 @@ impl RenderMgr {
                                 - cfg.header_height
                                 - cfg.footer_height
                                 - (data.lines().count() as u16);
-        write!(self.stdout, "\r{}", data)?;
+        write!(self.stdout, "\r{}\n", data)?;
+
+        for i in 0..cols_remains {
+            self.write_on_bg(" ".repeat(cfg.padding_size as usize)+ &i.to_string(), cfg)?;
+        }
+
         Ok(())
+    }
+
+    fn write_on_bg(&mut self, data: String, cfg: &Config) -> Result<()> {
+        write!(self.stdout, "\r{}\n", data
+                        .on(cfg.default_background_color)
+                        .with(cfg.default_font_color)
+        )?;
+    Ok(())
     }
 }
