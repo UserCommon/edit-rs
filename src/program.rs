@@ -3,13 +3,15 @@ use crossterm::cursor::CursorShape;
 use std::io::Result;
 use std::process::exit;
 use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Todo};
+use crate::files::FileMgr;
 
 
 pub struct Program {
     pub cfg: Config,
     cursor: Cursor,
     render: RenderMgr,
-    event: EventMgr
+    event: EventMgr,
+    pub file: FileMgr,
 }
 
 impl Program {
@@ -19,6 +21,7 @@ impl Program {
 
     pub fn run(&mut self) -> Result<()>{
         self.render.enter_canvas()?;
+        self.render.set_draw_data(self.file.get_text());
         loop {
             self.render.draw(&self.cfg)?;
             self.event.event_manager()?;
@@ -61,12 +64,14 @@ pub struct ProgramBuilder {
 }
 
 impl ProgramBuilder {
+
     pub fn build(&mut self) -> Program {
         Program {
             cfg: self.cfg.clone(),
             cursor: self.cursor.clone(),
             render: RenderMgr::new().unwrap(),
             event: EventMgr::new(),
+            file: FileMgr::new()
         }
     }
 
@@ -79,6 +84,7 @@ impl ProgramBuilder {
         self.cursor = cursor;
         self
     }
+
 }
 
 impl Default for ProgramBuilder {

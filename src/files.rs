@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Result};
+use std::ops::Range;
 
 
 pub struct FileMgr {
@@ -33,11 +34,10 @@ impl FileMgr {
         if self.curr > 0 { self.curr -= 1};
     }
 
-    pub fn get_text(&mut self) -> String {
-        let mut data = String::new();
-        self.files[self.curr].read_to_string(&mut data).expect("can't read file");
-        data
+    pub fn get_text(&mut self) -> Vec<String> {
+        let mut data_string = String::new();
+        self.files[self.curr].read_to_string(&mut data_string).expect("can't read file");
+
+        data_string.lines().map(|x| {x.to_string()}).collect::<Vec<String>>()
     }
-
-
 }
