@@ -2,29 +2,33 @@ use std::borrow::{Borrow, BorrowMut};
 use crossterm::cursor::CursorShape;
 use std::io::Result;
 use std::process::exit;
-use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Todo};
+use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Todo, Direction};
 use crate::files::FileMgr;
 
 
-pub struct Program<'a> {
+pub struct Program {
     pub cfg: Config,
     cursor: Cursor,
-    render: RenderMgr<'a>,
+    render: RenderMgr,
     event: EventMgr,
     pub file: FileMgr,
 }
 
-impl<'a> Program<'a> {
+impl Program {
     pub fn builder() -> ProgramBuilder {
         ProgramBuilder::default()
     }
 
     pub fn run(&mut self) -> Result<()>{
+        //render initialization & configuration.
         self.render.enter_canvas()?;
         self.render.set_draw_data(self.file.get_text());
-        self.render.set_config(&self.cfg);
+        self.render.set_config(self.cfg.clone());
+
+        //cursor configuration.
+        self.cursor.from_file_start();
         loop {
-            self.render.draw()?;
+            self.render.draw(&self.cursor)?;
             self.event.event_manager()?;
             self.handle_events()?;
         }
@@ -47,15 +51,31 @@ impl<'a> Program<'a> {
     fn match_event(&mut self, event: Todo) -> Result<()> {
         match event {
             Todo::Quit => {
-                self.render.exit()?;
-                exit(0);
+                self.exit()?;
             },
             Todo::Resize(row, col) => {
                 self.render.set_size((row, col));
             },
+            Todo::MoveDown => {
+                self.cursor.move_cursor(Direction::Down);
+            }
+            Todo::MoveUp => {
+                self.cursor.move_cursor(Direction::Up);
+            }
+            Todo::MoveLeft => {
+                self.cursor.move_cursor(Direction::Left);
+            }
+            Todo::MoveRight => {
+                self.cursor.move_cursor(Direction::Right);
+            }
             _ => ()
         }
         Ok(())
+    }
+
+    fn exit(&mut self) -> Result<()> {
+        self.render.exit()?;
+        exit(0);
     }
 }
 
@@ -90,7 +110,7 @@ impl ProgramBuilder {
 
 impl Default for ProgramBuilder {
     fn default() -> Self {
-        let mut cursor = Cursor::builder().shape(CursorShape::Line).build();
+        let cursor = Cursor::builder().shape(CursorShape::Line).build();
         let cfg = Config::builder().build();
 
 

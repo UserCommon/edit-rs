@@ -65,8 +65,8 @@ impl ConfigBuilder {
 impl Default for ConfigBuilder {
     fn default() -> Self {
         let padding_size = 4;
-        let header_height = 2;
-        let footer_height = 2;
+        let header_height = 1;
+        let footer_height = 1;
         let default_font_color = Color::Rgb {r: 255, g: 255, b: 255};
         let default_background_color = Color::Rgb {r: 44, g: 44, b: 44};
 

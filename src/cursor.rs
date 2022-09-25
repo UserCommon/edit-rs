@@ -1,4 +1,8 @@
-use crossterm::cursor::CursorShape;
+use std::io::Result;
+
+use crossterm::cursor::{self, CursorShape, MoveTo};
+use crossterm::execute;
+use crate::Config;
 use crate::utils::Direction;
 
 /// Cursor struct
@@ -6,7 +10,8 @@ use crate::utils::Direction;
 pub struct Cursor {
     pos: (u16, u16),
     blinking: bool,
-    shape: CursorShape
+    shape: CursorShape,
+    cfg: Config
 }
 
 impl Cursor {
@@ -26,18 +31,32 @@ impl Cursor {
 
     pub fn move_cursor(&mut self, direction: Direction) {
         match direction {
-            Direction::Up => self.pos.1 += 1,
-            Direction::Down => self.pos.1 -= 1,
+            Direction::Up => self.pos.1 -= 1,
+            Direction::Down => self.pos.1 += 1,
             Direction::Right => self.pos.0 += 1,
-            Direction::Left => self.pos.0 += 1
+            Direction::Left => self.pos.0 -= 1
         }
+    }
+
+    pub fn from_file_start(&mut self) {
+        self.pos.0 = self.cfg.padding_size + 1;
+        self.pos.1 = self.cfg.header_height;
+    }
+
+    pub fn from_line_start(&mut self) {
+        self.pos.0 = self.cfg.padding_size + 1;
+    }
+
+    pub fn update_config(&mut self, cfg: Config) {
+        self.cfg = cfg;
     }
 }
 
 pub struct CursorBuilder {
     pos: (u16, u16),
     blinking: bool,
-    shape: CursorShape
+    shape: CursorShape,
+    cfg: Option<Config>
 }
 
 impl CursorBuilder {
@@ -45,7 +64,8 @@ impl CursorBuilder {
         Cursor {
             pos: self.pos,
             blinking: self.blinking,
-            shape: self.shape
+            shape: self.shape,
+            cfg: self.cfg.clone().expect("No cfg in CursorBuilder")
         }
     }
 
@@ -63,6 +83,11 @@ impl CursorBuilder {
         self.shape = shape;
         self
     }
+
+    pub fn config(&mut self, cfg: Config) -> &mut Self {
+        self.cfg = Some(cfg);
+        self
+    }
 }
 
 impl Default for CursorBuilder {
@@ -70,11 +95,13 @@ impl Default for CursorBuilder {
         let pos = (0, 0);
         let blinking = false;
         let shape = CursorShape::Line;
+        let cfg = Config::builder().build();
 
         CursorBuilder {
             pos,
             blinking,
-            shape
+            shape,
+            cfg: Some(cfg)
         }
     }
 }

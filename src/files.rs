@@ -17,7 +17,7 @@ impl FileMgr {
     }
 
     pub fn add_file(&mut self, path: &str) -> Result<()> {
-        let mut file = File::options()
+        let file = File::options()
             .append(true)
             .read(true)
             .open(path)?;
