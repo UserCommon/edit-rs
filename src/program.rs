@@ -6,15 +6,15 @@ use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, r
 use crate::files::FileMgr;
 
 
-pub struct Program {
+pub struct Program<'a> {
     pub cfg: Config,
     cursor: Cursor,
-    render: RenderMgr,
+    render: RenderMgr<'a>,
     event: EventMgr,
     pub file: FileMgr,
 }
 
-impl Program {
+impl<'a> Program<'a> {
     pub fn builder() -> ProgramBuilder {
         ProgramBuilder::default()
     }
@@ -22,8 +22,9 @@ impl Program {
     pub fn run(&mut self) -> Result<()>{
         self.render.enter_canvas()?;
         self.render.set_draw_data(self.file.get_text());
+        self.render.set_config(&self.cfg);
         loop {
-            self.render.draw(&self.cfg)?;
+            self.render.draw()?;
             self.event.event_manager()?;
             self.handle_events()?;
         }
