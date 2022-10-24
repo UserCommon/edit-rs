@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Direction {
     Up,
     Down,
@@ -6,7 +7,8 @@ pub enum Direction {
 }
 
 
-pub enum Todo {
+#[derive(Debug, Clone)]
+pub enum Events {
     Quit,
     Write(char),
     Save,

@@ -8,7 +8,7 @@ use crate::utils::Direction;
 /// Cursor struct
 #[derive(Clone)]
 pub struct Cursor {
-    pos: (u16, u16),
+    pub pos: (u16, u16),
     blinking: bool,
     shape: CursorShape,
     cfg: Config
@@ -29,12 +29,24 @@ impl Cursor {
 
     pub fn set_shape(&mut self, shape: CursorShape) { self.shape = shape; }
 
-    pub fn move_cursor(&mut self, direction: Direction) {
+    pub fn move_c(&mut self, direction: Direction) {
+        let flag = self.can_move(&direction);
+
+        if flag {
+            match direction {
+                Direction::Up => self.pos.1 -= 1,
+                Direction::Down => self.pos.1 += 1,
+                Direction::Right => self.pos.0 += 1,
+                Direction::Left => self.pos.0 -= 1
+            }
+        }
+    }
+
+    fn can_move(&self, direction: &Direction) -> bool {
         match direction {
-            Direction::Up => self.pos.1 -= 1,
-            Direction::Down => self.pos.1 += 1,
-            Direction::Right => self.pos.0 += 1,
-            Direction::Left => self.pos.0 -= 1
+            Direction::Up => ((self.pos.1 - 1) >= self.cfg.header_height),
+            Direction::Down => true,
+            _ => {true}
         }
     }
 

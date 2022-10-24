@@ -1,4 +1,4 @@
-use crossterm::style::{Color};
+use crossterm::style::{Color, SetBackgroundColor, SetForegroundColor};
 
 /// Configuration struct
 #[derive(Clone)]
@@ -14,6 +14,16 @@ impl Config {
     pub fn builder() -> ConfigBuilder {
         ConfigBuilder::default()
     }
+
+    pub fn rgb_fg(color: Color) -> SetForegroundColor {
+        // Get the text ANSI code from an RGB value
+        SetForegroundColor(color)
+    }
+    pub fn rgb_bg(color: Color) -> SetBackgroundColor {
+        // Get the background ANSI code from an RGB value
+        SetBackgroundColor(color)
+    }
+
 
 }
 

@@ -2,13 +2,12 @@ use std::borrow::{Borrow, BorrowMut};
 use crossterm::cursor::CursorShape;
 use std::io::Result;
 use std::process::exit;
-use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Todo, Direction};
+use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Events, Direction};
 use crate::files::FileMgr;
 
 
 pub struct Program {
     pub cfg: Config,
-    cursor: Cursor,
     render: RenderMgr,
     event: EventMgr,
     pub file: FileMgr,
@@ -22,51 +21,47 @@ impl Program {
     pub fn run(&mut self) -> Result<()>{
         //render initialization & configuration.
         self.render.enter_canvas()?;
-        self.render.set_draw_data(self.file.get_text());
+        self.render.set_raw_data(self.file.get_text());
         self.render.set_config(self.cfg.clone());
 
         //cursor configuration.
-        self.cursor.from_file_start();
+        self.render.terminal.cursor.from_file_start();
+        //self.render.form_data(); -- Здесь можно запарсить осн документ, а шапку и футер оставить динамическим
         loop {
-            self.render.draw(&self.cursor)?;
-            self.event.event_manager()?;
-            self.handle_events()?;
+            self.render.draw()?;
+            self.event.event_manager()?; // <- | --BOTTLENECK ИЛИ НЕТ)
+            self.handle_events()?;       // <- /
         }
 
     }
 
     fn handle_events(&mut self) -> Result<()> {
-        let mut event;
-        for _ in 0..self.event.queue.len() {
-            event = self.event.queue.pop_back();
-            if let Some(e) = event {
-                self.match_event(e)?;
-            } else {
-                break;
-            }
+        for event in &self.event.queue.get_events().clone() {
+            self.match_event(event)?;
         }
+        self.event.queue.commit();
         Ok(())
     }
 
-    fn match_event(&mut self, event: Todo) -> Result<()> {
+    fn match_event(&mut self, event: &Events) -> Result<()> {
         match event {
-            Todo::Quit => {
+            Events::Quit => {
                 self.exit()?;
             },
-            Todo::Resize(row, col) => {
-                self.render.set_size((row, col));
+            Events::Resize(ref row,  ref col) => {
+                self.render.terminal.set_size((*row, *col));
             },
-            Todo::MoveDown => {
-                self.cursor.move_cursor(Direction::Down);
+            Events::MoveDown => {
+                self.render.terminal.move_cursor(Direction::Down);
             }
-            Todo::MoveUp => {
-                self.cursor.move_cursor(Direction::Up);
+            Events::MoveUp => {
+                self.render.terminal.move_cursor(Direction::Up);
             }
-            Todo::MoveLeft => {
-                self.cursor.move_cursor(Direction::Left);
+            Events::MoveLeft => {
+                self.render.terminal.move_cursor(Direction::Left);
             }
-            Todo::MoveRight => {
-                self.cursor.move_cursor(Direction::Right);
+            Events::MoveRight => {
+                self.render.terminal.move_cursor(Direction::Right);
             }
             _ => ()
         }
@@ -81,7 +76,6 @@ impl Program {
 
 pub struct ProgramBuilder {
     pub cfg: Config,
-    pub cursor: Cursor,
 }
 
 impl ProgramBuilder {
@@ -89,8 +83,7 @@ impl ProgramBuilder {
     pub fn build(&mut self) -> Program {
         Program {
             cfg: self.cfg.clone(),
-            cursor: self.cursor.clone(),
-            render: RenderMgr::new().unwrap(),
+            render: RenderMgr::new(),
             event: EventMgr::new(),
             file: FileMgr::new()
         }
@@ -101,21 +94,13 @@ impl ProgramBuilder {
         self
     }
 
-    pub fn cursor(&mut self, cursor: Cursor) -> &mut Self {
-        self.cursor = cursor;
-        self
-    }
-
 }
 
 impl Default for ProgramBuilder {
     fn default() -> Self {
-        let cursor = Cursor::builder().shape(CursorShape::Line).build();
         let cfg = Config::builder().build();
 
-
         ProgramBuilder {
-            cursor,
             cfg,
         }
     }
