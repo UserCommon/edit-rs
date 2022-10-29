@@ -28,7 +28,7 @@ impl Program {
         self.render.terminal.cursor.from_file_start();
         //self.render.form_data(); -- Здесь можно запарсить осн документ, а шапку и футер оставить динамическим
         loop {
-            self.render.draw()?;
+            self.render.update()?;
             self.event.event_manager()?; // <- | --BOTTLENECK ИЛИ НЕТ)
             self.handle_events()?;       // <- /
         }

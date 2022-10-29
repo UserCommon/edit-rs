@@ -1,6 +1,9 @@
-use std::io::Stdout;
+use std::io::Write;
+use std::io::stdout;
 use std::io::Result;
-use crossterm::terminal::size;
+use crossterm::execute;
+use crossterm::terminal::{self, size};
+use crossterm::style::{self, Color};
 use crate::{cursor, Cursor, Direction};
 
 
@@ -31,5 +34,26 @@ impl Terminal {
 
     pub fn move_cursor(&mut self, direction: Direction) {
         self.cursor.move_c(direction);
+    }
+
+    pub fn clear() {
+        execute!(stdout(), terminal::Clear(terminal::ClearType::All)).unwrap();
+    }
+
+    pub fn hide_cursor() {
+        // Hide the text cursor
+        execute!(stdout(), crossterm::cursor::Hide).unwrap();
+    }
+    pub fn show_cursor() {
+        execute!(stdout(), crossterm::cursor::Show).unwrap();
+    }
+
+    pub fn set_background(color: Color) {
+        execute!(stdout(), style::SetBackgroundColor(color)).unwrap();
+    }
+
+    pub fn flush() {
+        // Flush the screen to prevent weird behaviour
+        stdout().flush().unwrap();
     }
 }

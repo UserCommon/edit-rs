@@ -36,7 +36,7 @@ pub struct DataStorage {
 impl DataStorage {
     pub fn new() -> Self {
         DataStorage {
-            data: String::from("")
+            data: String::from("\r")
         }
     }
 
@@ -59,7 +59,7 @@ impl DataStorage {
     }
 
     pub fn clear(&mut self) {
-        self.data = String::from("");
+        self.data = String::from("\r");
     }
 
 }
@@ -98,10 +98,6 @@ impl RenderMgr {
         Ok(())
     }
 
-    pub fn flush(&mut self) {
-        // Flush the screen to prevent weird behaviour
-        self.stdout.flush().unwrap();
-    }
 
     pub fn exit(&mut self) -> Result<()> {
         disable_raw_mode()?;
@@ -111,26 +107,26 @@ impl RenderMgr {
 
     /// this function drawing things
     // ПЕРЕДАТЬ ВЛАДЕНИЕ КУРСОРОМ ТЕРМИНАЛУ
-    pub fn draw(&mut self) -> Result<()> {
-        let cfg = self.get_cfg();
-        let pos = self.terminal.cursor.get_pos();
-
-        execute!(&self.stdout, terminal::Clear(terminal::ClearType::All))?;
-        execute!(&self.stdout, style::SetBackgroundColor(cfg.default_background_color))?;
-        execute!(stdout(), crossterm::cursor::Hide).unwrap();
-
-        // draw_header
-        self.form_data();
-        write!(self.stdout, "{}", self.data.get_data())?;
-
-        // handle cursor
+    pub fn update(&mut self) -> Result<()> {
+        let pos = self.terminal.cursor.get_pos().clone();
+        Terminal::clear();
+        Terminal::hide_cursor();
         execute!(&self.stdout,
-                    MoveTo(pos.0, pos.1),
-                    SetCursorShape(self.terminal.cursor.shape()),
+            MoveTo(0, 0)
         )?;
-        execute!(stdout(), crossterm::cursor::Show).unwrap();
+
+        self.form_data();
+        write!(&self.stdout, "{}", self.data.get_data())?;
+
+        execute!(&self.stdout,
+            MoveTo(pos.0, pos.1),
+            SetCursorShape(self.terminal.cursor.shape()),
+        )?;
+
+        
         self.data.clear();
-        self.flush();
+        Terminal::show_cursor();
+        Terminal::flush();
         Ok(())
     }
 
@@ -147,7 +143,7 @@ impl RenderMgr {
 
         self.append_doc();
 
-        // draw footer
+        // update footer
         self.append_panel(
             &format!("Document: splash.txt"),
             KindOfPanel::Footer
@@ -189,7 +185,7 @@ impl RenderMgr {
         let cfg = &self.get_cfg().clone();
         let mut line = 1;
 
-        self.data.append_row(" ".to_string());
+        self.data.append_row("".to_string());
         for row in &self.raw_data {
             let doc_row = format!(
                 "{}{}{}",
@@ -206,7 +202,7 @@ impl RenderMgr {
         // ВОТ ЭТУ ХУЙНЮ УБРАТЬ ПАЛЮБАСУ В ПРОСТО РЕНДЕР
         // А ТО БУДЕТ КАПОШИТЬ НАХУЙ ПРИ СЕЙВЕ
         if line < self.terminal.columns {
-            for _ in 0..self.terminal.columns - line - 2 {
+            for _ in 0..self.terminal.columns - line - 1 {
                 let to_write = self.str_enumeration(line);
                 self.data.append_row(to_write);
                 line += 1;

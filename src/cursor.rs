@@ -1,6 +1,7 @@
 use std::io::Result;
 
 use crossterm::cursor::{self, CursorShape, MoveTo};
+use crossterm::terminal::size;
 use crossterm::execute;
 use crate::Config;
 use crate::utils::Direction;
@@ -45,7 +46,9 @@ impl Cursor {
     fn can_move(&self, direction: &Direction) -> bool {
         match direction {
             Direction::Up => ((self.pos.1 - 1) >= self.cfg.header_height),
-            Direction::Down => true,
+            Direction::Down => ((self.pos.1 + 1) <= size().unwrap().1 - self.cfg.header_height - self.cfg.footer_height),
+            Direction::Left => !((self.pos.0 - 1) <= self.cfg.padding_size),
+            Direction::Right => (self.pos.0 + 1) < size().unwrap().0,
             _ => {true}
         }
     }
