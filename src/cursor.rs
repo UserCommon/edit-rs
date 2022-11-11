@@ -43,13 +43,13 @@ impl Cursor {
         }
     }
 
+    // TODO! Change move cursor to right(So you can't move if there is no characters in line)
     fn can_move(&self, direction: &Direction) -> bool {
         match direction {
             Direction::Up => ((self.pos.1 - 1) >= self.cfg.header_height),
             Direction::Down => ((self.pos.1 + 1) <= size().unwrap().1 - self.cfg.header_height - self.cfg.footer_height),
             Direction::Left => !((self.pos.0 - 1) <= self.cfg.padding_size),
             Direction::Right => (self.pos.0 + 1) < size().unwrap().0,
-            _ => {true}
         }
     }
 

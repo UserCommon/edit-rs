@@ -2,8 +2,10 @@ use std::borrow::{Borrow, BorrowMut};
 use crossterm::cursor::CursorShape;
 use std::io::Result;
 use std::process::exit;
+use crate::terminal::Terminal;
 use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Events, Direction};
 use crate::files::FileMgr;
+use std::thread;
 
 
 pub struct Program {
@@ -13,6 +15,7 @@ pub struct Program {
     pub file: FileMgr,
 }
 
+// TODO: попробовать сделать более лёгкий эвент менеджер.(Избавиться от векторов)
 impl Program {
     pub fn builder() -> ProgramBuilder {
         ProgramBuilder::default()
@@ -29,40 +32,79 @@ impl Program {
         //self.render.form_data(); -- Здесь можно запарсить осн документ, а шапку и футер оставить динамическим
         loop {
             self.render.update()?;
-            self.event.event_manager()?; // <- | --BOTTLENECK ИЛИ НЕТ)
-            self.handle_events()?;       // <- /
+            self.event.event_manager()?; // <- | --BOTTLENECK)
+            self.handle_events()?;
         }
 
     }
 
     fn handle_events(&mut self) -> Result<()> {
-        for event in &self.event.queue.get_events().clone() {
-            self.match_event(event)?;
+        for event in self.event.queue.get().clone() {
+            self.match_event(&event)?;
         }
-        self.event.queue.commit();
+        self.event.queue.clear();
         Ok(())
     }
 
     fn match_event(&mut self, event: &Events) -> Result<()> {
+        let (row, col) = self.render.terminal.cursor.get_pos();
+        let (row, col) = ((row - self.cfg.padding_size - 1) as usize, (col - self.cfg.header_height) as usize);
+    
         match event {
             Events::Quit => {
                 self.exit()?;
             },
             Events::Resize(ref row,  ref col) => {
                 self.render.terminal.set_size((*row, *col));
+                Terminal::clear();
             },
             Events::MoveDown => {
                 self.render.terminal.move_cursor(Direction::Down);
-            }
+            },
             Events::MoveUp => {
                 self.render.terminal.move_cursor(Direction::Up);
-            }
+            },
             Events::MoveLeft => {
                 self.render.terminal.move_cursor(Direction::Left);
-            }
+            },
             Events::MoveRight => {
                 self.render.terminal.move_cursor(Direction::Right);
-            }
+            },
+            
+            Events::Erase => {
+                let (row, col) = (row, col);
+                
+                if row > 0 {
+                    self.render.raw_data[col] = format!(
+                        "{}{}",
+                        &self.render.raw_data[col][0..(row - 1)],
+                        &self.render.raw_data[col][row..] // Кириллица не поддерживается. Нужно сделать отдельную структуру под хранение чаров
+                    );
+                    Terminal::clear();
+                    self.render.terminal.move_cursor(Direction::Left);
+                }
+            },
+
+            Events::Write(char) => {
+        
+                self.render.raw_data[col] = format!(
+                    "{}{}{}",
+                    &self.render.raw_data[col][0..row],
+                    char,
+                    &self.render.raw_data[col][row..]
+                );
+                self.render.terminal.move_cursor(Direction::Right);
+            },
+
+            Events::Space => {
+                self.render.raw_data[col] = format!(
+                    "{}{}{}",
+                    &self.render.raw_data[col][0..row],
+                    " ",
+                    &self.render.raw_data[col][row..],
+                );
+                self.render.terminal.move_cursor(Direction::Right);
+            },
             _ => ()
         }
         Ok(())

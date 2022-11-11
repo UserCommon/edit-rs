@@ -1,4 +1,4 @@
-use crate::utils::{Direction, Events::{self, *}};
+use crate::{utils::{Direction, Events::{self, *}}, terminal::Terminal};
 use std::collections::vec_deque::VecDeque;
 use std::time::Duration;
 use std::io::Result;
@@ -11,7 +11,7 @@ use crossterm::event::{
     poll,
     read,
 };
-
+/* 
 #[derive(Debug)]
 pub struct EventStack {
     history: Vec<Vec<Events>>,
@@ -57,15 +57,42 @@ impl EventStack {
         &self.curr_patch
     }
 }
+*/
+
+
+pub struct EventQueue(Vec<Events>);
+
+impl EventQueue {
+    pub fn new() -> Self {
+        EventQueue(vec![])
+    }
+
+    pub fn get(&self) -> &Vec<Events> {
+        &self.0
+    }
+
+    pub fn push(&mut self, item: Events) {
+        self.0.insert(0, item);
+    }
+
+    pub fn remove(&mut self) {
+        self.0.pop().unwrap();
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+}
 
 pub struct EventMgr {
-    pub queue: EventStack
+    pub queue: EventQueue
 }
+
 
 impl EventMgr {
     pub fn new() -> Self {
         EventMgr {
-            queue: EventStack::new()
+            queue: EventQueue::new()
         }
     }
 
@@ -84,7 +111,7 @@ impl EventMgr {
 
             KeyEvent {
                 code: KeyCode::Char('q'),
-                modifiers: CONTROL,
+                modifiers: KeyModifiers::CONTROL,
                 ..
             } => self.queue.push(Quit),
 
@@ -111,9 +138,20 @@ impl EventMgr {
             } => self.queue.push(MoveRight),
 
             KeyEvent {
+                code: KeyCode::Backspace,
+                ..
+            } => self.queue.push(Erase),
+
+            KeyEvent {
+                code: KeyCode::Char(' '),
+                ..
+            } => self.queue.push(Space),
+
+            KeyEvent {
                 code: KeyCode::Char(ch),
                 ..
             } => self.queue.push(Write(ch)),
+            
 
             _ => ()
         }

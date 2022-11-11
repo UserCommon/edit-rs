@@ -69,7 +69,7 @@ pub struct RenderMgr {
     pub terminal: Terminal,
     stdout: Stdout,
     data: DataStorage,
-    raw_data: Vec<String>,
+    pub raw_data: Vec<String>,
     cfg: Option<Config>
 }
 
@@ -106,14 +106,15 @@ impl RenderMgr {
     }
 
     /// this function drawing things
-    // ПЕРЕДАТЬ ВЛАДЕНИЕ КУРСОРОМ ТЕРМИНАЛУ
     pub fn update(&mut self) -> Result<()> {
         let pos = self.terminal.cursor.get_pos().clone();
-        Terminal::clear();
+        
         Terminal::hide_cursor();
         execute!(&self.stdout,
             MoveTo(0, 0)
         )?;
+
+        //Terminal::clear(); // <= Too slow
 
         self.form_data();
         write!(&self.stdout, "{}", self.data.get_data())?;
@@ -202,7 +203,7 @@ impl RenderMgr {
         // ВОТ ЭТУ ХУЙНЮ УБРАТЬ ПАЛЮБАСУ В ПРОСТО РЕНДЕР
         // А ТО БУДЕТ КАПОШИТЬ НАХУЙ ПРИ СЕЙВЕ
         if line < self.terminal.columns {
-            for _ in 0..self.terminal.columns - line - 1 {
+            for _ in 0..self.terminal.columns - line {
                 let to_write = self.str_enumeration(line);
                 self.data.append_row(to_write);
                 line += 1;

@@ -16,6 +16,8 @@ pub enum Events {
     MoveDown,
     MoveLeft,
     MoveRight,
+    Space,
+    Erase,
     //columns, rows
     Resize(u16, u16)
 }
