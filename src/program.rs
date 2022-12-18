@@ -5,7 +5,9 @@ use std::process::exit;
 use crate::terminal::Terminal;
 use crate::{
     utils,
-    cursor::Cursor,
+    cursor::{
+        *
+    },
     events::EventMgr,
     renderer,
     config::Config,
@@ -13,6 +15,7 @@ use crate::{
     Events,
     Direction
 };
+
 use crate::files::FileMgr;
 use std::thread;
 
@@ -24,7 +27,8 @@ pub struct Program {
     pub file: FileMgr,
 }
 
-
+// TODO: Сделать короче это...
+// Проверку на то, можно ли шевелить курсором
 impl Program {
     pub fn builder() -> ProgramBuilder {
         ProgramBuilder::default()
@@ -58,8 +62,7 @@ impl Program {
 
     fn match_event(&mut self, event: &Events) -> Result<()> {
         let (row, col) = self.render.terminal.cursor.get_pos();
-        let (row, col) = ((row - self.cfg.padding_size - 1) as usize, (col - self.cfg.header_height) as usize);
-    
+        let (row, col) = ((row - self.cfg.padding_size - 1) as usize, (col - self.cfg.header_height) as usize); 
         match event {
             Events::Quit => {
                 self.exit()?;

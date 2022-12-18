@@ -4,7 +4,8 @@ use std::io::Result;
 use crossterm::execute;
 use crossterm::terminal::{self, size};
 use crossterm::style::{self, Color};
-use crate::{cursor, Cursor, Direction};
+use crate::cursor::*;
+use crate::Direction;
 
 
 pub struct Terminal {
@@ -19,7 +20,7 @@ impl Terminal {
         Ok(Terminal {
             rows: size.0,
             columns: size.1,
-            cursor: Cursor::builder().build()
+            cursor: Cursor::new(),
         })
     }
 
@@ -30,10 +31,6 @@ impl Terminal {
     pub fn set_size(&mut self, size: (u16, u16)) {
         self.rows = size.0;
         self.columns = size.1;
-    }
-
-    pub fn move_cursor(&mut self, direction: Direction) {
-        self.cursor.move_c(direction);
     }
 
     pub fn clear() {
@@ -55,5 +52,19 @@ impl Terminal {
     pub fn flush() {
         // Flush the screen to prevent weird behaviour
         stdout().flush().unwrap();
+    }
+}
+
+impl CursorMoveMethods for Terminal {
+    fn move_cursor(&mut self, direction: Direction) {
+        self.cursor.move_cursor(direction);
+    }
+
+    fn from_line_start(&mut self) {
+        self.cursor.from_line_start();
+    }
+
+    fn from_file_start(&mut self) {
+        self.cursor.from_file_start();
     }
 }

@@ -12,7 +12,7 @@ use std::io::Result;
 use utils::{Direction, Events};
 use config::Config;
 use program::Program;
-use cursor::Cursor;
+use cursor::*;
 
 
 fn main() -> Result<()>{

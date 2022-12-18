@@ -16,7 +16,7 @@ use crossterm::{execute, terminal::{
 }, ExecutableCommand, style};
 use crossterm::cursor::{DisableBlinking, EnableBlinking, MoveTo, SetCursorShape};
 use crossterm::style::{SetBackgroundColor, SetForegroundColor, style};
-use crate::Cursor;
+use crate::cursor::*;
 use crate::terminal::Terminal;
 
 
