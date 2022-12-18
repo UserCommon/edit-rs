@@ -203,7 +203,7 @@ impl RenderMgr {
         // ВОТ ЭТУ ХУЙНЮ УБРАТЬ ПАЛЮБАСУ В ПРОСТО РЕНДЕР
         // А ТО БУДЕТ КАПОШИТЬ НАХУЙ ПРИ СЕЙВЕ
         if line < self.terminal.columns {
-            for _ in 0..self.terminal.columns - line {
+            for _ in 0..self.terminal.columns - line - 1 {
                 let to_write = self.str_enumeration(line);
                 self.data.append_row(to_write);
                 line += 1;

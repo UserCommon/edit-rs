@@ -3,7 +3,16 @@ use crossterm::cursor::CursorShape;
 use std::io::Result;
 use std::process::exit;
 use crate::terminal::Terminal;
-use crate::{utils, cursor::Cursor, events::EventMgr, renderer, config::Config, renderer::RenderMgr, Events, Direction};
+use crate::{
+    utils,
+    cursor::Cursor,
+    events::EventMgr,
+    renderer,
+    config::Config,
+    renderer::RenderMgr,
+    Events,
+    Direction
+};
 use crate::files::FileMgr;
 use std::thread;
 
@@ -15,7 +24,7 @@ pub struct Program {
     pub file: FileMgr,
 }
 
-// TODO: попробовать сделать более лёгкий эвент менеджер.(Избавиться от векторов)
+
 impl Program {
     pub fn builder() -> ProgramBuilder {
         ProgramBuilder::default()
@@ -34,8 +43,9 @@ impl Program {
             self.render.update()?;
             self.event.event_manager()?; // <- | --BOTTLENECK)
             self.handle_events()?;
+            Terminal::clear();
         }
-
+        
     }
 
     fn handle_events(&mut self) -> Result<()> {

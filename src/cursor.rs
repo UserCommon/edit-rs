@@ -1,5 +1,3 @@
-use std::io::Result;
-
 use crossterm::cursor::{self, CursorShape, MoveTo};
 use crossterm::terminal::size;
 use crossterm::execute;
@@ -31,6 +29,10 @@ impl Cursor {
     pub fn set_shape(&mut self, shape: CursorShape) { self.shape = shape; }
 
     pub fn move_c(&mut self, direction: Direction) {
+        // TODO:
+        // Чё за хуйня? Типо проверка на возможность внутри функции внутри функции нахуй
+        // SRP НАРУШЕН К ХУЯМ
+        // перепистть can_move в месте, которое владеет информацией о длинне строк.
         let flag = self.can_move(&direction);
 
         if flag {

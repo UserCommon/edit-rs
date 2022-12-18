@@ -11,53 +11,6 @@ use crossterm::event::{
     poll,
     read,
 };
-/* 
-#[derive(Debug)]
-pub struct EventStack {
-    history: Vec<Vec<Events>>,
-    curr_patch: Vec<Events>
-}
-
-impl EventStack {
-    pub fn new() -> Self {
-        EventStack {
-            history: vec![],
-            curr_patch: vec![]
-        }
-    }
-
-    pub fn push(&mut self, event: Events) {
-        self.curr_patch.insert(0, event);
-    }
-
-    pub fn pop(&mut self) -> Option<Vec<Events>> {
-        self.history.pop()
-    }
-
-    pub fn append(&mut self, events: Vec<Events>) {
-        self.history.push(events);
-    }
-
-    pub fn clear(&mut self) {
-        self.history.clear();
-    }
-
-    pub fn commit(&mut self) {
-        if !self.curr_patch.is_empty() {
-            self.history.push(self.curr_patch.clone());
-            self.curr_patch.clear();
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.history.len()
-    }
-
-    pub fn get_events(&self) -> &Vec<Events> {
-        &self.curr_patch
-    }
-}
-*/
 
 
 pub struct EventQueue(Vec<Events>);
