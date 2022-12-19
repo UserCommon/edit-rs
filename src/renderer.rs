@@ -30,46 +30,66 @@ pub enum KindOfPanel {
 
 // TODO! Refactor & add config field
 pub struct DataStorage {
-    data: String,
+    pub data: Vec<Vec<char>>,
+}
+
+pub trait DataReadMethods {
+    fn get_data(&self) -> &Vec<Vec<char>>;
+    fn get_data_row(&self, indecies: usize) -> &Vec<char>;
+}
+
+pub trait DataModifyMethods {
+    fn append_data_row(&mut self, row: String);
+    fn append_data(&mut self, data: String);
+    fn clear(&mut self);
+    
+    fn edit_line(&mut self, index: usize, line: String);
 }
 
 impl DataStorage {
     pub fn new() -> Self {
         DataStorage {
-            data: String::from("\r")
+            data: vec![vec!['\r']],
         }
-    }
-
-    pub fn append_row(&mut self, row: String) {
-        self.data += &format!("\r{}\n", row);
-    }
-
-    pub fn append_data(&mut self, data: String) {
-        self.data += &format!("\r{}", data);
-    }
-
-    pub fn get_data(&self) -> &String {
-        &self.data
-    }
-
-    pub fn get_data_by_rows(&self) -> Vec<String> {
-        self.data.split("\n")
-            .map(|x| x.to_string())
-            .collect::<Vec<String>>()
-    }
-
-    pub fn clear(&mut self) {
-        self.data = String::from("\r");
     }
 
 }
 
+impl DataModifyMethods for DataStorage {
+    fn append_data_row(&mut self, row: String) {
+        let row = &format!("\r{}\n", row);
+        self.data.push(row.chars().collect());
+    }
+
+    fn append_data(&mut self, data: String) {
+        self.data.push(data.chars().collect()); 
+    }
+
+   
+    fn clear(&mut self) {
+        self.data = vec![vec!['\n']];
+    }
+
+    fn edit_line(&mut self, index: usize, line: String) {
+        self.data[index] = line.chars().collect();
+    }
+}
+
+impl DataReadMethods for DataStorage {
+    fn get_data(&self) -> &Vec<Vec<char>> {
+        &self.data
+    }
+
+    fn get_data_row(&self, index: usize) -> &Vec<char> {
+        &self.data[index]
+    }
+}
 
 pub struct RenderMgr {
     pub terminal: Terminal,
     stdout: Stdout,
-    data: DataStorage,
-    pub raw_data: Vec<String>,
+    pub data: DataStorage,
+    //pub raw_data: Vec<String>,
     cfg: Option<Config>
 }
 
@@ -79,18 +99,21 @@ impl RenderMgr {
             terminal: Terminal::new().unwrap(),
             stdout: stdout(),
             data: DataStorage::new(),
-            raw_data: Vec::new(),
+            //raw_data: Vec::new(),
             cfg: None,
         }
     }
 
     pub fn set_config(&mut self, cfg: Config) {
         self.cfg = Some(cfg);
+        //self.terminal.set_config(cfg);
     }
 
+    /*
     pub fn set_raw_data(&mut self, raw_data: Vec<String>) {
         self.raw_data = raw_data;
     }
+    */
 
     pub fn enter_canvas(&mut self) -> Result<()> {
         self.stdout.execute(EnterAlternateScreen)?;
@@ -117,7 +140,15 @@ impl RenderMgr {
         //Terminal::clear(); // <= Too slow
 
         self.form_data();
-        write!(&self.stdout, "{}", self.data.get_data())?;
+
+        let mut string = "".to_string();
+        let data = self.data.get_data();
+        for col in data {
+            for row in col {
+                string.push(*row);
+            }
+        } 
+        write!(&self.stdout, "{}", string)?;
 
         execute!(&self.stdout,
             MoveTo(pos.0, pos.1),
@@ -163,7 +194,7 @@ impl RenderMgr {
     fn append_header_or_footer(&mut self, label: &str, cfg: &Config) {
 
         let mut to_draw = format!(
-            "{}{}{}",
+            "\r{}{}{}",
             Config::rgb_bg(cfg.default_background_color),
             " ".repeat(self.terminal.rows as usize - label.len()) + label,
             RESET_BG
@@ -186,17 +217,17 @@ impl RenderMgr {
         let cfg = &self.get_cfg().clone();
         let mut line = 1;
 
-        self.data.append_row("".to_string());
-        for row in &self.raw_data {
+        self.data.append_data_row("".to_string());
+        for row in self.data.get_data() {
             let doc_row = format!(
                 "{}{}{}",
                 Config::rgb_fg(cfg.default_font_color),
-                row,
+                row.iter().collect::<String>(),
                 RESET_FG,
 
             );
             let to_write = format!("{} {}", self.str_enumeration(line), doc_row);
-            self.data.append_row(to_write);
+            self.data.append_data_row(to_write);
             line += 1;
         }
 
@@ -205,7 +236,7 @@ impl RenderMgr {
         if line < self.terminal.columns {
             for _ in 0..self.terminal.columns - line - 1 {
                 let to_write = self.str_enumeration(line);
-                self.data.append_row(to_write);
+                self.data.append_data_row(to_write);
                 line += 1;
             }
         }
@@ -238,6 +269,14 @@ impl RenderMgr {
     fn get_cfg(&self) -> &Config {
         self.cfg.as_ref().unwrap()
     }
+}
 
+impl DataReadMethods for RenderMgr {
+    fn get_data(&self) -> &Vec<Vec<char>> {
+        self.data.get_data()
+    }
 
+    fn get_data_row(&self, indecies: usize) -> &Vec<char> {
+        self.data.get_data_row(indecies)
+    }
 }
